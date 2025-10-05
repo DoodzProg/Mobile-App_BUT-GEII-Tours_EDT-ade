@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, useColorScheme, StatusBar } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // AJOUTÉ : Import pour la persistance
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import ICAL from 'ical.js';
 
@@ -34,8 +34,10 @@ const groups = {
     'ESE2': "https://ade.univ-tours.fr/jsp/custom/modules/plannings/ZYja4X3B.shu",
   },
 };
+
 // Liste des jours de la semaine
 const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
+
 // Définition des thèmes
 const themes = {
   light: {
@@ -75,6 +77,7 @@ const themes = {
     modalButton: '#444',
   },
 };
+
 // Fonction pour extraire les événements
 async function getIcsEvents(url) {
   try {
@@ -93,6 +96,7 @@ async function getIcsEvents(url) {
       const location = vevent.getFirstPropertyValue('location') || 'Salle inconnue';
       
       let cleanSummary = event.summary;
+      
       // Regex pour extraire le type de cours (CM, TD, TP)
       const typeMatch = cleanSummary.match(/\b(CM|TD|TP)\b/i);
       const courseType = typeMatch ? typeMatch[1].toUpperCase() : 'Autre';
@@ -121,8 +125,8 @@ async function getIcsEvents(url) {
        
         teacher: teacherLine,
         timeLog: timeLogLine,
-        courseType, // Ajout du type de cours
-        courseName, // Ajout du nom de la matière
+        courseType,
+        courseName,
       };
     });
     events.sort((a, b) => a.start - b.start);
@@ -136,7 +140,7 @@ async function getIcsEvents(url) {
 
 // Fonction pour déterminer si une couleur est claire ou foncée et renvoyer la couleur de texte appropriée
 const getContrastColor = (hexcolor) => {
-  if (!hexcolor) return '#000'; // Retourne une couleur par défaut si hexcolor est null
+  if (!hexcolor) return '#000';
   const r = parseInt(hexcolor.substr(1, 2), 16);
   const g = parseInt(hexcolor.substr(3, 2), 16);
   const b = parseInt(hexcolor.substr(5, 2), 16);
@@ -187,7 +191,7 @@ const GroupSelectionModal = ({ visible, onClose, onSelectGroup, theme }) => {
 };
 
 // Modale de sélection de thème
-const ThemeSelectionModal = ({ visible, onClose, onBack, onSelectTheme, theme, themePreference }) => { // MODIFIÉ : currentTheme renommé en themePreference
+const ThemeSelectionModal = ({ visible, onClose, onBack, onSelectTheme, theme, themePreference }) => {
   return (
     <Modal
       animationType="slide"
@@ -640,15 +644,16 @@ const getWeekNumber = (date) => {
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 };
+
 // Composant principal de l'application
 export default function App() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [currentDayOffset, setCurrentDayOffset] = useState(0);
-  const [currentYear, setCurrentYear] = useState('BUT3'); // CONSERVER L'ÉTAT INITIAL PAR DÉFAUT
-  const [currentGroup, setCurrentGroup] = useState('AII1'); // CONSERVER L'ÉTAT INITIAL PAR DÉFAUT
-  const [groupHasLoaded, setGroupHasLoaded] = useState(false); // AJOUTÉ : Pour s'assurer de ne charger les événements qu'après le groupe
+  const [currentYear, setCurrentYear] = useState('BUT3');
+  const [currentGroup, setCurrentGroup] = useState('AII1');
+  const [groupHasLoaded, setGroupHasLoaded] = useState(false);
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [menuModalVisible, setMenuModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -660,22 +665,22 @@ export default function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   
   // MODIFIÉ : Nouvelle logique de gestion du thème et persistance
-  const systemTheme = useColorScheme(); // 'light' ou 'dark' du système
-  const [themePreference, setThemePreference] = useState('system'); // 'system', 'dark', ou 'light' (la préférence de l'utilisateur)
+  const systemTheme = useColorScheme();
+  const [themePreference, setThemePreference] = useState('system');
   
   // Détermine le thème actif final
   const activeTheme = themePreference === 'system' ? systemTheme : themePreference;
   const [viewMode, setViewMode] = useState('week');
+  
   // 'week' ou 'day'
   const [courseTypeColors, setCourseTypeColors] = useState({});
   const [courseNameColors, setCourseNameColors] = useState({});
   const [coloringMode, setColoringMode] = useState('type');
-  // 'type' ou 'name'
   
-  // MODIFIÉ : Utilise activeTheme au lieu de currentTheme
+  // Utilise activeTheme
   const theme = themes[activeTheme] || themes.light; 
 
-  // AJOUTÉ : Effet pour charger la préférence de thème ET les couleurs au démarrage
+  // Effet pour charger la préférence de thème ET les couleurs au démarrage
   useEffect(() => {
     const loadPreferences = async () => {
       try {
@@ -721,7 +726,7 @@ export default function App() {
       } catch (e) {
         console.error('Erreur lors du chargement des préférences:', e);
       } finally {
-        setGroupHasLoaded(true); // AJOUTÉ : Indique que le chargement initial est terminé
+        setGroupHasLoaded(true);
       }
     };
     loadPreferences();
@@ -729,7 +734,7 @@ export default function App() {
   // FIN MODIFICATION LOGIQUE DU THÈME
 
   useEffect(() => {
-    if (!groupHasLoaded) return; // ATTENDRE QUE LE GROUPE SAUVEGARDÉ SOIT CHARGÉ (AJOUTÉ)
+    if (!groupHasLoaded) return;
 
     setLoading(true);
     const icsUrl = groups[currentYear][currentGroup];
@@ -744,8 +749,7 @@ export default function App() {
       .finally(() => {
         setLoading(false);
       });
-  }, [currentYear, currentGroup, groupHasLoaded]); // groupHasLoaded ajouté aux dépendances
-// ...
+  }, [currentYear, currentGroup, groupHasLoaded]);
 
   const handleUpdateUrl = (year, groupName, url) => {
     groups[year][groupName] = url;
@@ -755,7 +759,7 @@ export default function App() {
     setMenuModalVisible(false);
   };
 
-  // MODIFIÉ : Fonction pour définir et sauvegarder la préférence de thème
+  // Fonction pour définir et sauvegarder la préférence de thème
   const handleSelectTheme = async (preference) => {
     try {
       await AsyncStorage.setItem('@theme_preference', preference);
@@ -979,7 +983,8 @@ export default function App() {
           onPress={() => setGroupModalVisible(true)}
           style={[
             styles.selectGroupButton,
-            // MODIFICATION : Couleur manuelle du bouton de groupe (gris clair/gris foncé)
+            
+            // Couleur manuelle du bouton de groupe (gris clair/gris foncé)
             {
               backgroundColor: activeTheme === 'light' ? '#f0f0f0' : '#333333', // Gris clair pour le thème blanc, Gris foncé pour le thème noir
             },
@@ -1063,7 +1068,7 @@ export default function App() {
         }}
         onSelectTheme={handleSelectTheme}
         theme={theme}
-        themePreference={themePreference} // MODIFIÉ : Passe la préférence au lieu du thème actuel
+        themePreference={themePreference} // Passe la préférence au lieu du thème actuel
       />
       <CourseColorCustomizationModal
         visible={courseColorModalVisible}
@@ -1085,7 +1090,6 @@ export default function App() {
         onClose={() => setDetailsModalVisible(false)}
         onBack={() => {
           setDetailsModalVisible(false);
-          // Pas de modale précédente pour le retour ici, donc on ferme
         }}
         event={selectedEvent}
         theme={theme}
@@ -1113,7 +1117,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     borderBottomWidth: 1,
   },
-  selectGroupButton: { // MODIFIÉ
+  selectGroupButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1134,7 +1138,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginRight: 5,
   },
-  dropdownIcon: { // AJOUTÉ
+  dropdownIcon: {
     marginLeft: 5,
   },
   weekNavigator: {
@@ -1223,6 +1227,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     textAlign: 'center',
   },
+  
   // Styles pour les modales
   modalOverlay: {
     flex: 1,
@@ -1291,7 +1296,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  // Nouveaux styles pour les boutons en bas des modales
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1379,7 +1383,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: 'center',
   },
-  // Nouveaux styles pour les détails de l'événement
   detailsTable: {
     width: '100%',
   },
@@ -1399,12 +1402,10 @@ const styles = StyleSheet.create({
   italicText: {
     fontStyle: 'italic',
   },
-  // Nouveau style pour le bouton de thème sélectionné
   selectedButton: {
     borderWidth: 2,
     borderColor: '#66a3ff',
   },
-  // Nouveaux styles pour la personnalisation
   viewToggleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1480,12 +1481,12 @@ const styles = StyleSheet.create({
     right: 0,
     borderRadius: 5,
     borderWidth: 1,
-    zIndex: 1000, // Make this menu appear on top of other elements
+    zIndex: 1000,
     marginTop: 5,
     maxHeight: 200,
   },
   dropdownScrollView: {
-    maxHeight: 200, // Add this to make the dropdown list scrollable
+    maxHeight: 200,
   },
   dropdownItem: {
     flexDirection: 'row',
