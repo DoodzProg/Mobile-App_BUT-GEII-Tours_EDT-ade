@@ -8,8 +8,7 @@ Application mobile non-officielle pour la consultation des emplois du temps (EDT
 
 Ce dépôt contient le code source complet de l'application.
 
-`[Image de l'application EDT Geii Tours]`
-*(TODO: Insérez une capture d'écran de l'application ici)*
+![Aperçu du menu de l'application v1.3.0](assets/screenshots/1-App_v1.3.0_Menu.png)
 
 ## ✨ Fonctionnalités
 * **Consultation des EDT** : Accédez à l'emploi du temps de n'importe quel groupe du BUT GEII.
