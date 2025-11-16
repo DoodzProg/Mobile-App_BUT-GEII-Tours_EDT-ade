@@ -1,40 +1,30 @@
 {
   "expo": {
-    "name": "but-geii-tours-edt-mobile-app",
-    "slug": "but-geii-tours-edt-mobile-app",
-    "version": "1.0.0",
+    "name": "EDT Geii Tours",
+    "slug": "edt-geii-tours",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#C5C4C5"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.doodz.schedule_geii_tours",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.doodz.schedule_geii_tours"
+        "foregroundImage": "./assets/icon-foreground.png",
+        "backgroundColor": "#C5C4C5"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "9d39462a-6041-491c-9a5a-fc4db3a4c4c3"
-      }
-    },
-    "owner": "doodz"
+    }
   }
 }
