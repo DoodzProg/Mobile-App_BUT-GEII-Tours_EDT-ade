@@ -1,188 +1,158 @@
-# EDT Geii Tours (Application Mobile) v1.3.0
+<div align="center">
+  <img src="./assets/icon.png" alt="Logo" width="120" height="120" style="border-radius: 20px" />
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/DoodzProg/but-geii-tours-edt-mobile-app)
-[![Plateforme](https://img.shields.io/badge/plateforme-Android-brightgreen.svg)](#)
-[![Construit avec](https://img.shields.io/badge/construit%20avec-Expo-9cf.svg)](https://expo.dev/)
+  # 📅 EDT GEII Tours - Mobile App
+  
+  **L'application d'emploi du temps ultime pour le département GEII de l'IUT de Tours.**
 
-Application mobile non-officielle pour la consultation des emplois du temps (EDT) des étudiants du BUT Génie Électrique et Informatique Industrielle (GEII) de l'IUT de Tours (site de Grandmont, 37).
+  [![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android)](https://play.google.com/store/apps/details?id=fr.doodz.edtgeii)
+  [![Framework](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-61DAFB?style=for-the-badge&logo=react)](https://expo.dev/)
+  [![Status](https://img.shields.io/badge/Version-1.4.0-blue?style=for-the-badge)]()
+  [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)]()
 
-Ce dépôt contient le code source complet de l'application.
-
-![Application EDT GEII Tours](assets/screenshots/1-App_v1.3.0_Menu.png)
-
-## ✨ Fonctionnalités
-* **Consultation des EDT** : Accédez à l'emploi du temps de n'importe quel groupe du BUT GEII.
-* **Mise en cache intelligente** : L'emploi du temps est sauvegardé en local. Pas besoin de le regénérer à chaque ouverture.
-* **Personnalisation** :
-    * Thème Sombre / Clair (s'adapte au système).
-    * Vue "Semaine" (5j), "Semaine & Week-end" (7j) ou "Jour".
-* **Détails des cours** : Cliquez sur un cours pour voir le professeur, la salle, et les groupes concernés.
-* **Sécurisé** : Utilise les API de l'université sans exposer d'identifiants dans le code (via `.env`).
-* **Mode Débogage** : Accès aux logs via un "Easter Egg" (6 appuis sur le titre "Menu").
-* **Actualisation forcée** : Un bouton pour forcer la regénération du calendrier en cas de bug.
+  <a href="https://play.google.com/store/apps/details?id=fr.doodz.edtgeii">
+    <img alt="Get it on Google Play" height="80" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"/>
+  </a>
+</div>
 
 ---
 
-## 🚀 Guide d'installation et d'utilisation (de A à Z)
+## 📸 Aperçu de l'interface
 
-Ce guide est destiné à toute personne souhaitant exécuter ce projet en local sur sa machine (Windows).
-
-### Tutorial 1 : Préparer votre environnement (La base)
-
-Avant de pouvoir lancer le projet, vous avez besoin de 3 outils essentiels sur votre PC Windows :
-
-#### 1. Git
-Git est l'outil qui vous permettra de cloner (télécharger) ce projet.
-* **Téléchargement** : Allez sur [git-scm.com](https://git-scm.com/downloads) et téléchargez l'installeur pour Windows.
-* **Installation** : Lancez l'installeur. **Vous pouvez laisser toutes les options par défaut** (cliquez simplement "Next" à chaque étape).
-
-#### 2. Node.js (Version LTS)
-C'est le "moteur" JavaScript qui fait tourner Expo et React Native.
-* **Téléchargement** : Allez sur [nodejs.org](https://nodejs.org/) et téléchargez la version **LTS** (Long Term Support).
-* **Installation** : Lancez l'installeur. Laissez toutes les options par défaut.
-* **Vérification** : Après l'installation, ouvrez un nouveau terminal (PowerShell) et tapez `node -v` et `npm -v`. Si vous voyez des numéros de version, c'est bon !
-
-#### 3. Expo Go (sur votre téléphone)
-C'est l'application mobile qui va "lire" votre code en direct.
-* Allez sur le **Google Play Store** sur votre téléphone Android.
-* Cherchez et installez l'application **"Expo Go"**.
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><b>Planning (Thème Solarized)</b></td>
+      <td align="center"><b>Vue 5 Jours (Thème Abyss)</b></td>
+      <td align="center"><b>Menu Principal</b></td>
+    </tr>
+    <tr>
+      <td><img src="./assets/screenshots/1 - Planning color (theme Solarized).jpg" width="250" /></td>
+      <td><img src="./assets/screenshots/2 - Planning defaut (theme Abyss).jpg" width="250" /></td>
+      <td><img src="./assets/screenshots/3 - Menu (theme Comfy).jpg" width="250" /></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Gestion des Favoris</b></td>
+      <td align="center"><b>Notifications</b></td>
+      <td align="center"><b>Choix des Thèmes</b></td>
+    </tr>
+    <tr>
+      <td><img src="./assets/screenshots/10 - Menu des favoris (theme DarkGreen).jpg" width="250" /></td>
+      <td><img src="./assets/screenshots/5 - Notifications (theme DarkGreen).jpg" width="250" /></td>
+      <td><img src="./assets/screenshots/6 - Menu des themes (theme Nord).jpg" width="250" /></td>
+    </tr>
+     <tr>
+      <td align="center"><b>Personnalisation Couleurs</b></td>
+      <td align="center"><b>Sélecteur de Couleur</b></td>
+      <td align="center"><b>Types d'affichage</b></td>
+    </tr>
+    <tr>
+      <td><img src="./assets/screenshots/7 - Couleurs par type de cours (theme Monokai).jpg" width="250" /></td>
+      <td><img src="./assets/screenshots/8 - Listes couleurs personnalisable (theme Monokai).jpg" width="250" /></td>
+      <td><img src="./assets/screenshots/9 - Affichage par 5j 7j 1j (theme Abyss).jpg" width="250" /></td>
+    </tr>
+  </table>
+</div>
 
 ---
 
-### ⚙️ Tutorial 2 : Installer et configurer le projet
+## ✨ Mises à jour majeures (v1.4.0)
 
-Maintenant que votre PC est prêt, voici comment récupérer et configurer le projet.
+Cette version introduit une refonte complète de l'architecture des données pour une performance et une fiabilité accrues.
 
-#### Étape 1 : Cloner le projet
-Ouvrez un terminal (PowerShell) là où vous voulez mettre votre projet (ex: `C:\Users\VotreNom\Desktop\Projets`) et tapez :
-```sh
-git clone https://github.com/DoodzProg/but-geii-tours-edt-mobile-app.git
-````
+### 🚀 Architecture "Single Source of Truth"
+* **Optimisation Réseau :** L'application ne fait plus qu'**UNE SEULE requête API** globale. Elle télécharge un fichier `.ics` massif contenant l'intégralité des plannings (Étudiants, Profs, Salles, Groupes...).
+* **Zéro Latence :** Le changement de groupe, d'enseignant ou de salle est désormais **instantané** car il s'agit d'un filtrage local des données déjà en mémoire.
+* **Stabilité :** Supprime totalement le risque de "rate limiting" (bannissement temporaire) par le serveur ADE, car l'utilisateur ne bombarde plus l'API à chaque clic.
+* **Mode Hors-Ligne Robuste :** Le calendrier global est mis en cache (`AsyncStorage`). L'application reste 100% fonctionnelle même sans internet. (En se basant sur les dernières données chargées)
 
-#### Étape 2 : Entrer dans le dossier
+### 🏢 Gestion des Salles & Disponibilités
+* **Planning des Salles :** Consultation de l'emploi du temps de n'importe quelle salle de l'IUT, triées par étage.
+* **Filtre "Salles Libres" :** Un bouton intelligent permet de n'afficher que les salles disponibles.
+    * *Algorithme :* Une salle est considérée libre si aucun cours n'y a lieu **maintenant** ET dans les **15 prochaines minutes**. Idéal pour trouver une salle de travail rapidement.
 
-Une fois le téléchargement fini, entrez dans le nouveau dossier :
+### ⭐ Système de Favoris
+* Accès rapide via l'étoile en haut à droite.
+* Permet de sauvegarder des **groupes** (ex: BUT3 AII2), des **salles** (ex: GR W 006) pour basculer de l'un à l'autre en un clic.
 
-```sh
-cd but-geii-tours-edt-mobile-app
-```
+### 🔔 Notifications Intelligentes
+* Système de rappel configurable.
+* L'utilisateur peut choisir d'être notifié **X temps** (de 00h00 à 24h59) avant le début de son prochain cours.
+* Fonctionne en arrière-plan grâce à `expo-notifications`.
 
-#### Étape 3 : Installer les dépendances
+### 🎨 UX & Personnalisation
+* **Navigation par Swipe :** Glissez latéralement sur le planning pour changer de semaine ou de jour.
+* **Nouveaux Thèmes Premium :** Ajout de *Abyss*, *Dark Green* (Matrix), *Dracula*, *Nord*, *Monokai* et *Solarized* en plus des classiques Jour/Nuit.
+* **Couleurs Dynamiques :** Personnalisation complète des couleurs par matière ou par type de cours (CM/TD/TP).
 
-Tapez cette commande. Elle va lire le `package.json` et télécharger tous les paquets nécessaires (React, Expo, Axios, etc.) dans un dossier `node_modules`.
+---
 
-```sh
-npm install
-```
+## 📋 Prérequis
 
-*(Cela peut prendre 1 ou 2 minutes).*
+Avant de commencer, assurez-vous d'avoir installé les outils suivants sur votre machine (Windows, macOS ou Linux) :
 
-#### Étape 4 : Configuration des secrets (TRÈS IMPORTANT)
+* **Node.js (Version LTS recommandée)** : Le moteur pour faire tourner le projet.
+    * 👉 [Télécharger Node.js](https://nodejs.org/)
+* **Git** : Nécessaire pour récupérer (cloner) le code source.
+    * 👉 [Télécharger Git](https://git-scm.com/downloads)
+* **Expo Go** : L'application mobile pour tester le projet en temps réel sur votre téléphone physique.
+    * 📲 [Android (Play Store)](https://play.google.com/store/apps/details?id=host.exp.exponent) | [iOS (App Store)](https://apps.apple.com/app/expo-go/id982107779)
+* **Visual Studio Code** (Recommandé) : L'éditeur de code idéal pour ce projet.
+    * 👉 [Télécharger VS Code](https://code.visualstudio.com/)
 
-L'application a besoin d'identifiants pour se connecter à l'API de l'université. Ces identifiants sont secrets et ne sont pas sur GitHub.
+> **⚠️ Pour la compilation locale (Étape 4.1 uniquement) :**
+> Si vous comptez compiler l'APK sur votre propre machine (sans les serveurs Expo), vous aurez besoin en plus de **Java (JDK 17)** et du **Android SDK**.
+> * [Guide officiel pour configurer l'environnement Android](https://reactnative.dev/docs/environment-setup)
 
-1.  Dans le dossier, vous verrez un fichier nommé `.env.example`. C'est un modèle.
-2.  Faites une **copie** de ce fichier et renommez la copie en **`.env`** (juste `.env`, sans rien avant).
-3.  Ouvrez ce nouveau fichier `.env` avec un éditeur de texte (comme VS Code ou le Bloc-notes).
-4.  Remplissez les variables avec les identifiants d'accès :
+## 🛠️ Installation
 
-<!-- end list -->
+Pour tester ou contribuer au projet :
 
-```ini
-ADE_USER= MyUserName
-ADE_PASS= MyPassword
-```
+1.  **Cloner le dépôt :**
+    ```bash
+    git clone https://github.com/DoodzProg/Mobile-App_BUT-GEII-Tours_EDT-ade.git
+    cd Mobile-App_BUT-GEII-Tours_EDT-ade
+    ```
 
-> **Note** : Le fichier `.gitignore` est configuré pour que votre fichier `.env` ne soit **jamais** envoyé sur GitHub. Vos secrets sont en sécurité sur votre machine.
+2.  **Installer les dépendances :**
+    ```bash
+    npm install
+    ```
 
------
-
-### 🏃 Tutorial 3 : Lancer l'application (Mode Développement)
-
-Vous y êtes presque \! Votre PC et votre téléphone doivent être **sur le même réseau Wi-Fi**.
-
-1.  Dans votre terminal (toujours dans le dossier du projet), lancez le serveur Expo :
-
-    ```sh
+3.  **Lancer le serveur de développement :**
+    ```bash
     npx expo start
     ```
 
-    *Note : Si vous avez des problèmes, relancez avec le cache vidé : `npx expo start -c`.*
-
-2.  Un gros **QR code** va s'afficher dans votre terminal.
-
-3.  Ouvrez l'application **Expo Go** sur votre téléphone.
-
-4.  Depuis l'écran d'accueil d'Expo Go, scannez le QR code.
-
-5.  L'application va se compiler ("Bundling...") et se lancer en direct sur votre téléphone \! Toutes les modifications que vous ferez dans le code (ex: `App.js`) se mettront à jour automatiquement.
-
------
-
-### 📦 Tutorial 4 : Construire l'APK (Mode Production)
-
-Quand vous avez fini vos modifications et que vous voulez créer un fichier `.apk` final (pour l'installer directement), vous devez utiliser le service de "build" d'Expo : **EAS (Expo Application Services)**.
-
-#### Étape 1 : Installer EAS CLI
-
-C'est l'outil d'Expo pour gérer les builds. Tapez dans votre terminal :
-
-```sh
-npm install -g eas-cli
-```
-
-*`-g ` signifie "global", pour l'installer partout sur votre PC).*
-
-#### Étape 2 : Se connecter à votre compte Expo
-
-Vous avez besoin d'un compte Expo (gratuit). Si vous n'en avez pas, [créez-en un ici](https://expo.dev/signup).
-
-```sh
-eas login
-```
-
-*(Suivez les instructions pour vous connecter).*
-
-#### Étape 3 : Configurer le projet pour EAS
-
-EAS utilise un fichier `eas.json` pour savoir comment "builder" votre app.
-
-1.  Lancez la commande de configuration :
-    ```sh
-    eas build:configure
+4.  **Compiler l'APK (Cloud - Serveurs Expo) :**
+    Cette méthode utilise les serveurs d'Expo.
+    *Note : Le plan gratuit d'Expo impose une file d'attente prioritaire et une limite mensuelle de builds.*
+    ```bash
+    eas build --profile preview --platform android
     ```
-2.  L'outil va vous poser des questions :
-      * `Which platforms do you want to configure?` -\> Choisissez `Android` (avec la barre d'espace et Entrée).
-      * `Generate a new Android Keystore?` -\> Dites `Yes` (c'est la "signature" de votre app).
 
-#### Étape 4 : Lancer le build
 
-Maintenant, dites à Expo de construire l'APK pour vous :
+4.1. **Alternative : Compiler en local (Illimité) :**
+    Pour éviter les files d'attente et les limites, vous pouvez compiler directement sur votre machine.
+    * **Prérequis :** Nécessite un environnement **Linux** ou **macOS**. Sur Windows (10/11), vous devez impérativement utiliser **WSL (Windows Subsystem for Linux)**.
+    * *L'environnement de développement Android (JDK/SDK) doit être configuré.*
+    ```bash
+    eas build --profile preview --platform android --local
+    ```
 
-```sh
-eas build --platform android --profile preview
-```
+---
 
-  * `--platform android` : On veut un APK.
-  * `--profile preview` : On veut un `.apk` facile à installer (parfait pour les tests).
+## 🏗️ Stack Technique
 
-#### Étape 5 : Télécharger l'APK
+* **Framework :** [React Native](https://reactnative.dev/) via [Expo](https://expo.dev/) (SDK 52).
+* **Parsing Calendrier :** `ical.js` pour le traitement du fichier ICS global.
+* **Stockage Local :** `@react-native-async-storage/async-storage` pour le cache et les préférences utilisateurs.
+* **Requêtes HTTP :** `axios` avec gestion des cookies pour l'authentification CAS.
+* **UI/UX :** Composants natifs, gestes tactiles (`onTouchStart/End`), animations fluides.
 
-Le "build" ne se fait pas sur votre PC, mais sur les serveurs d'Expo (ça peut prendre 5-10 minutes).
+---
 
-Une fois terminé, EAS vous donnera un **lien de téléchargement** dans votre terminal. Vous pourrez télécharger le fichier `.apk` et l'installer sur n'importe quel téléphone Android.
-
-## 🛠️ Stack Technique
-
-  * **Framework** : [Expo (React Native)](https://expo.dev/)
-  * **Requêtes API** : [Axios](https://axios-http.com/)
-  * **Parsing Calendrier** : [ical.js](https://github.com/mozilla-comm/ical.js/)
-  * **Stockage local** : [AsyncStorage](https://github.com/react-native-async-storage/async-storage)
-  * **Gestion des secrets** : [react-native-dotenv](https://www.google.com/search?q=https://github.com/zetavg/react-native-dotenv)
-
-## 📄 Licence
-
-Ce projet est sous licence MIT.
-
-```
-```
+<div align="center">
+  <p>Développé avec ❤️ par <b>Doodz</b></p>
+  <p>Étudiant en BUT GEII - IUT de Tours (2023-2026)</p>
+</div>

@@ -41,8 +41,9 @@ yarn-error.*
 /ios
 /android
 
-# Fichiers à ignorer spécifiques au projet
+# Fichiers spécifiques projet à ignorer
 arbre.txt
+arbre_temporaire.txt
 index.js
 eas.json
 builds_archives/

@@ -1,36 +1,48 @@
 {
   "expo": {
-    "name": "EDT Geii Tours",
-    "slug": "edt-geii-tours",
-    "version": "1.3.0",
+    "name": "EDT GEII",
+    "slug": "edt-geii",
+    "version": "1.4.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#C5C4C5"
+      "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "fr.doodz.edtgeii",
+      "buildNumber": "1.4.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon-foreground.png",
-        "backgroundColor": "#C5C4C5"
+        "backgroundColor": "#ffffff"
       },
-      "package": "fr.doodzprog.edtgeii"
+      "package": "fr.doodz.edtgeii",
+      "versionCode": 4,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "827a6064-6742-4be4-9a84-ccaf6d2c8026"
-      }
-    }
+    "plugins": [
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon-foreground.png",
+          "color": "#ffffff"
+        }
+      ]
+    ]
   }
 }

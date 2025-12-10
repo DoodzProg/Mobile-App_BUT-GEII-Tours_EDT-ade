@@ -1,31 +1,44 @@
 /**
- * @file API ADE - Version Axios Ultra-Robuste CORRIGÉE
- * @author Doodz + Claude
+ * @file API ADE - Version Calendrier Global Unifié
+ * @author Doodz
  * @date Novembre 2025
- *
- * CORRECTIONS MAJEURES :
- * - Fix récupération token execution (regex améliorée)
- * - Gestion cookies avec tough-cookie (compatible React Native)
- * - Axios configuré avec axios-cookiejar-support
- * - Validation URL optimisée
- * - Cache persistant illimité
- * - Retry intelligent avec reset complet
+ * @description Module de gestion de l'API ADE pour récupérer le calendrier global GEII
+ * 
+ * FONCTIONNALITÉS :
+ * - Génération d'URL .ical contenant TOUTES les classes GEII
+ * - Système de cache persistant avec validation
+ * - Gestion intelligente du mode hors ligne
+ * - Retry automatique en cas d'échec
+ * - Système de logs détaillé
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import axios from 'axios';
 
-import { ADE_USER, ADE_PASS } from '@env';
-
 // ===============================================================================================
 // CONFIGURATION
 // ===============================================================================================
 
+/** Nombre maximum de tentatives de connexion */
 const MAX_RETRY_ATTEMPTS = 10;
+
+/** Timeout pour la validation d'URL (en ms) */
 const URL_VALIDATION_TIMEOUT = 8000;
 
-// Configuration Axios globale de base
+/**
+ * Liste complète des IDs de toutes les classes GEII
+ * - BUT1 : 10767-10776, 10448
+ * - BUT2 : 10485-11032
+ * - BUT3 : 10538-10970
+ */
+const ALL_CLASS_IDS = [
+  10767, 10768, 10769, 10770, 10771, 10772, 10773, 10776, 10448, // BUT1
+  10485, 10515, 10896, 11032, 10464, 10932, // BUT2
+  10538, 10459, 10982, 11014, 10969, 10970  // BUT3
+];
+
+// Configuration Axios globale
 axios.defaults.timeout = 15000;
 axios.defaults.headers.common['User-Agent'] = 'Mozilla/5.0 (Linux; Android 11; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36';
 
@@ -33,6 +46,11 @@ axios.defaults.headers.common['User-Agent'] = 'Mozilla/5.0 (Linux; Android 11; S
 // SYSTÈME DE LOGS
 // ===============================================================================================
 
+/**
+ * Ajoute une entrée dans les logs de l'application
+ * @param {string} message - Message à logger
+ * @param {string} level - Niveau de log (INFO, DEBUG, ERROR)
+ */
 async function addLog(message, level = 'INFO') {
   try {
     const timestamp = new Date().toISOString();
@@ -40,7 +58,7 @@ async function addLog(message, level = 'INFO') {
     
     const existingLogs = await AsyncStorage.getItem('@app_logs') || '';
     const lines = existingLogs.split('\n');
-    const recentLines = lines.slice(-300);
+    const recentLines = lines.slice(-300); // Garde les 300 dernières lignes
     const updatedLogs = recentLines.join('\n') + logEntry;
     
     await AsyncStorage.setItem('@app_logs', updatedLogs);
@@ -50,6 +68,10 @@ async function addLog(message, level = 'INFO') {
   }
 }
 
+/**
+ * Récupère tous les logs de l'application
+ * @returns {Promise<string>} Contenu des logs
+ */
 export async function getLogs() {
   try {
     return await AsyncStorage.getItem('@app_logs') || 'Aucun log disponible.';
@@ -58,6 +80,9 @@ export async function getLogs() {
   }
 }
 
+/**
+ * Efface tous les logs de l'application
+ */
 export async function clearLogs() {
   try {
     await AsyncStorage.removeItem('@app_logs');
@@ -71,27 +96,34 @@ export async function clearLogs() {
 // GESTION DU CACHE PERSISTANT
 // ===============================================================================================
 
-async function saveUrlToCache(classe, url) {
+/**
+ * Sauvegarde l'URL du calendrier global dans le cache
+ * @param {string} url - URL à mettre en cache
+ */
+async function saveUrlToCache(url) {
   try {
     const cacheEntry = {
       url: url,
-      timestamp: Date.now(),
-      classe: classe
+      timestamp: Date.now()
     };
-    await AsyncStorage.setItem(`@url_cache_${classe}`, JSON.stringify(cacheEntry));
+    await AsyncStorage.setItem('@global_calendar_cache', JSON.stringify(cacheEntry));
     
     const ageStr = new Date().toLocaleString('fr-FR');
-    await addLog(`✅ Cache sauvegardé [${classe}] le ${ageStr}`, "INFO");
+    await addLog(`✅ Cache global sauvegardé le ${ageStr}`, "INFO");
   } catch (error) {
     await addLog(`Erreur sauvegarde cache : ${error.message}`, "ERROR");
   }
 }
 
-async function getUrlFromCache(classe) {
+/**
+ * Récupère l'URL du calendrier depuis le cache
+ * @returns {Promise<string|null>} URL mise en cache ou null
+ */
+async function getUrlFromCache() {
   try {
-    const cached = await AsyncStorage.getItem(`@url_cache_${classe}`);
+    const cached = await AsyncStorage.getItem('@global_calendar_cache');
     if (!cached) {
-      await addLog(`Aucun cache trouvé pour classe ${classe}`, "DEBUG");
+      await addLog(`Aucun cache global trouvé`, "DEBUG");
       return null;
     }
 
@@ -100,7 +132,7 @@ async function getUrlFromCache(classe) {
     const ageInDays = Math.floor(age / 1000 / 60 / 60 / 24);
     const ageInHours = Math.floor((age / 1000 / 60 / 60) % 24);
     
-    await addLog(`Cache trouvé [${classe}] : ${ageInDays}j ${ageInHours}h`, "DEBUG");
+    await addLog(`Cache global trouvé : ${ageInDays}j ${ageInHours}h`, "DEBUG");
     return cacheEntry.url;
   } catch (error) {
     await addLog(`Erreur lecture cache : ${error.message}`, "ERROR");
@@ -109,7 +141,9 @@ async function getUrlFromCache(classe) {
 }
 
 /**
- * VALIDATION ROBUSTE : Télécharge les premiers octets et vérifie que c'est du .ical valide
+ * Vérifie si une URL .ical est encore valide
+ * @param {string} url - URL à valider
+ * @returns {Promise<boolean>} true si l'URL est valide
  */
 async function isUrlStillValid(url) {
   try {
@@ -123,24 +157,20 @@ async function isUrlStillValid(url) {
     const text = response.data;
     
     if (typeof text !== 'string' || !text.startsWith('BEGIN:VCALENDAR')) {
-      await addLog(`❌ URL ne retourne pas un .ical valide (commence par: ${String(text).substring(0, 50)})`, "DEBUG");
+      await addLog(`❌ URL ne retourne pas un .ical valide`, "DEBUG");
       return false;
     }
 
     if (!text.includes('BEGIN:VEVENT')) {
-      await addLog(`❌ Fichier .ical vide (aucun événement)`, "DEBUG");
+      await addLog(`❌ Fichier .ical vide`, "DEBUG");
       return false;
     }
 
-    await addLog(`✅ URL valide (HTTP 200, contenu .ical OK)`, "INFO");
+    await addLog(`✅ URL valide (contenu .ical OK)`, "INFO");
     return true;
     
   } catch (error) {
-    if (error.code === 'ECONNABORTED') {
-      await addLog(`❌ Timeout validation URL (>${URL_VALIDATION_TIMEOUT}ms)`, "DEBUG");
-    } else {
-      await addLog(`❌ Erreur validation : ${error.message}`, "DEBUG");
-    }
+    await addLog(`❌ Erreur validation : ${error.message}`, "DEBUG");
     return false;
   }
 }
@@ -149,6 +179,10 @@ async function isUrlStillValid(url) {
 // DÉTECTION RÉSEAU
 // ===============================================================================================
 
+/**
+ * Vérifie si l'appareil est connecté à Internet
+ * @returns {Promise<boolean>} true si en ligne
+ */
 export async function isOnline() {
   try {
     const state = await NetInfo.fetch();
@@ -165,10 +199,21 @@ export async function isOnline() {
 // FONCTIONS UTILITAIRES
 // ===============================================================================================
 
+/**
+ * Pause l'exécution pendant un temps donné
+ * @param {number} ms - Durée en millisecondes
+ */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Convertit un chiffre en caractère Base64 personnalisé
+ * @param {Array} sb - Tableau de caractères
+ * @param {number} digit - Chiffre à convertir
+ * @param {boolean} haveNonZero - Flag pour éviter les zéros initiaux
+ * @returns {boolean} true si on a rencontré un chiffre non-zéro
+ */
 function base64Append(sb, digit, haveNonZero) {
   if (digit > 0) haveNonZero = true;
   if (haveNonZero) {
@@ -183,6 +228,11 @@ function base64Append(sb, digit, haveNonZero) {
   return haveNonZero;
 }
 
+/**
+ * Convertit un entier long en chaîne Base64 personnalisée
+ * @param {number} value - Valeur à convertir
+ * @returns {string} Chaîne Base64
+ */
 function longToBase64(value) {
   const low = value & 0xffffffff;
   const high = Math.floor(value / 0x100000000);
@@ -203,10 +253,19 @@ function longToBase64(value) {
   return sb.join("");
 }
 
+/**
+ * Convertit une date en chaîne Base64
+ * @param {Date} date - Date à convertir
+ * @returns {string} Chaîne Base64
+ */
 function dateStringToBase64(date) {
   return longToBase64(date.getTime());
 }
 
+/**
+ * Génère un ID utilisateur basé sur l'heure actuelle
+ * @returns {string} ID utilisateur en Base64
+ */
 function currentTimeToBase64() {
   const date = new Date();
   date.setHours(date.getHours() - 2);
@@ -214,20 +273,18 @@ function currentTimeToBase64() {
 }
 
 // ===============================================================================================
-// CONNEXION CAS + GWT-RPC AVEC AXIOS
+// CONNEXION CAS + GWT-RPC
 // ===============================================================================================
 
 /**
- * Effectue la connexion CAS complète avec Axios
- * CORRECTION MAJEURE : Regex améliorée + gestion cookies avec tough-cookie
+ * Effectue la connexion au serveur CAS de l'université
+ * @returns {Promise<axios.AxiosInstance>} Instance axios avec session authentifiée
  */
 async function performLogin() {
   await addLog("🔐 Connexion CAS en cours...", "INFO");
   
-  // URL de login AVEC 'renew=true' pour forcer la re-connexion
   const loginUrl = "https://cas.univ-tours.fr/cas/login?service=https%3A%2F%2Fade.univ-tours.fr%2Fdirect%2Fmyplanning.jsp&renew=true";
 
-  // Créer une instance Axios avec support cookies
   const sessionAxios = axios.create({
     timeout: 15000,
     withCredentials: true,
@@ -239,119 +296,96 @@ async function performLogin() {
   });
   
   try {
-    // Étape 1 : Récupérer le jeton execution
     await addLog("Étape 1/2 : GET jeton execution", "DEBUG");
     
-    const response1 = await sessionAxios.get(
-      loginUrl
-    );
+    const response1 = await sessionAxios.get(loginUrl);
     
     if (response1.status !== 200) {
       throw new Error(`HTTP ${response1.status} à l'étape 1`);
     }
     
     const html = response1.data;
-    
-    // CORRECTION : Regex multiple pour plus de robustesse
     let execution = null;
     
-    // Tentative 1 : Regex standard
+    // Recherche du jeton execution dans le HTML
     let match = html.match(/<input[^>]*name="execution"[^>]*value="([^"]*)"[^>]*>/i);
-    if (match && match[1]) {
-      execution = match[1];
-    }
+    if (match && match[1]) execution = match[1];
     
-    // Tentative 2 : Regex inversée (value avant name)
     if (!execution) {
       match = html.match(/<input[^>]*value="([^"]*)"[^>]*name="execution"[^>]*>/i);
-      if (match && match[1]) {
-        execution = match[1];
-      }
+      if (match && match[1]) execution = match[1];
     }
     
-    // Tentative 3 : Regex simplifiée
     if (!execution) {
       match = html.match(/name="execution"\s+value="([^"]+)"/i);
-      if (match && match[1]) {
-        execution = match[1];
-      }
+      if (match && match[1]) execution = match[1];
     }
     
-    // Tentative 4 : Regex ultra-permissive
     if (!execution) {
       match = html.match(/execution.*?value=["']([^"']+)["']/i);
-      if (match && match[1]) {
-        execution = match[1];
-      }
+      if (match && match[1]) execution = match[1];
     }
     
     if (!execution) {
-      // Debug : sauvegarder le HTML pour analyse
       await addLog(`HTML reçu (premiers 500 chars) : ${html.substring(0, 500)}`, "DEBUG");
-      throw new Error("Jeton execution introuvable dans HTML (toutes regex ont échoué)");
+      throw new Error("Jeton execution introuvable");
     }
     
     await addLog(`✅ Jeton obtenu : ${execution.substring(0, 20)}...`, "DEBUG");
 
-    // Délai aléatoire pour simuler comportement humain
+    // Délai aléatoire pour simuler un comportement humain
     const randomDelay = 400 + Math.floor(Math.random() * 300);
     await sleep(randomDelay);
 
-    // Étape 2 : POST identifiants
     await addLog("Étape 2/2 : POST identifiants", "DEBUG");
 
     const response2 = await sessionAxios.post(
       loginUrl,
-      `username=${ADE_USER}&password=${ADE_PASS}&execution=${execution}&_eventId=submit&geolocation=`,
+      `username=ade-etudiant&password=test&execution=${execution}&_eventId=submit&geolocation=`,
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Referer': loginUrl,
           'Origin': 'https://cas.univ-tours.fr'
         },
-        maxRedirects: 5, // Suivre les redirections
-        validateStatus: (status) => status >= 200 && status < 400 // Accepter redirections
+        maxRedirects: 5,
+        validateStatus: (status) => status >= 200 && status < 400
       }
     );
 
     await addLog("✅ Connexion CAS réussie", "INFO");
-    
-    // Retourner l'instance axios avec les cookies configurés
     return sessionAxios;
     
   } catch (error) {
     await addLog(`❌ Erreur connexion CAS : ${error.message}`, "ERROR");
-    if (error.response) {
-      await addLog(`Détails réponse : Status ${error.response.status}, Headers: ${JSON.stringify(error.response.headers)}`, "DEBUG");
-    }
     throw error;
   }
 }
 
 /**
- * Génère l'URL .ical via GWT-RPC avec l'instance Axios authentifiée
- * OPTIMISATION : Demande 1 an de planning (septembre année N → août année N+1)
+ * Génère l'URL du fichier .ical contenant TOUTES les classes GEII
+ * @param {axios.AxiosInstance} sessionAxios - Instance axios authentifiée
+ * @returns {Promise<string>} URL du fichier .ical global
  */
-async function generateIcalUrl(sessionAxios, classe) {
+async function generateGlobalIcalUrl(sessionAxios) {
   const userId = currentTimeToBase64();
 
-  // DATES OPTIMISÉES : 1 an de planning
+  // Calcul de l'année scolaire
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth(); // 0-11
+  const currentMonth = now.getMonth();
   
-  // Si on est entre janvier et août, l'année scolaire a commencé l'année dernière
   const schoolYearStart = currentMonth < 8 ? currentYear - 1 : currentYear;
   
-  const date1 = new Date(schoolYearStart, 8, 1); // 1er septembre année N
-  const date2 = new Date(schoolYearStart + 1, 7, 31); // 31 août année N+1
+  const date1 = new Date(schoolYearStart, 8, 1); // 1er septembre
+  const date2 = new Date(schoolYearStart + 1, 7, 31); // 31 août
   
   await addLog(`Dates demandées : ${date1.toLocaleDateString()} → ${date2.toLocaleDateString()}`, "DEBUG");
 
   try {
-    // Étape 3 : GWT Login
     await addLog("Étape 3/4 : GWT Login", "DEBUG");
     
+    // Connexion au service GWT
     const response3 = await sessionAxios.post(
       "https://ade.univ-tours.fr/direct/gwtdirectplanning/MyPlanningClientServiceProxy",
       `7|0|8|https://ade.univ-tours.fr/direct/gwtdirectplanning/|217140C31DF67EF6BA02D106930F5725|com.adesoft.gwt.directplan.client.rpc.MyPlanningClientServiceProxy|method1login|J|com.adesoft.gwt.core.client.rpc.data.LoginRequest/3705388826|com.adesoft.gwt.directplan.client.rpc.data.DirectLoginRequest/635437471||1|2|3|4|2|5|6|${userId}|7|0|0|0|1|1|8|8|-1|0|0|`,
@@ -365,17 +399,22 @@ async function generateIcalUrl(sessionAxios, classe) {
     );
     
     if (response3.status !== 200) {
-      throw new Error(`HTTP ${response3.status} à l'étape 3 (GWT Login)`);
+      throw new Error(`HTTP ${response3.status} à l'étape 3`);
     }
 
     await sleep(200 + Math.floor(Math.random() * 150));
 
-    // Étape 4 : Génération URL iCal
-    await addLog("Étape 4/4 : Génération URL .ical", "DEBUG");
+    await addLog("Étape 4/4 : Génération URL .ical GLOBAL", "DEBUG");
+    
+    // Construction du payload avec TOUS les IDs de classes
+    const classIdsPayload = ALL_CLASS_IDS.map(id => `9|${id}`).join('|');
+    const numberOfClasses = ALL_CLASS_IDS.length;
+    
+    const payload = `7|0|11|https://ade.univ-tours.fr/direct/gwtdirectplanning/|748880AB5D6D59CC4770FCCE7567EA63|com.adesoft.gwt.core.client.rpc.CorePlanningServiceProxy|method11getGeneratedUrl|J|java.util.List|java.lang.String/2004016611|java.util.Date/3385151746|java.lang.Integer/3438268394|java.util.ArrayList/4159755760|ical|1|2|3|4|7|5|6|7|8|8|9|9|${userId}|10|${numberOfClasses}|${classIdsPayload}|11|8|${dateStringToBase64(date1)}|8|${dateStringToBase64(date2)}|9|-1|9|226|`;
     
     const response4 = await sessionAxios.post(
       "https://ade.univ-tours.fr/direct/gwtdirectplanning/CorePlanningServiceProxy",
-      `7|0|11|https://ade.univ-tours.fr/direct/gwtdirectplanning/|748880AB5D6D59CC4770FCCE7567EA63|com.adesoft.gwt.core.client.rpc.CorePlanningServiceProxy|method11getGeneratedUrl|J|java.util.List|java.lang.String/2004016611|java.util.Date/3385151746|java.lang.Integer/3438268394|java.util.ArrayList/4159755760|ical|1|2|3|4|7|5|6|7|8|8|9|9|${userId}|10|1|9|${classe}|11|8|${dateStringToBase64(date1)}|8|${dateStringToBase64(date2)}|9|-1|9|226|`,
+      payload,
       {
         headers: {
           "Content-Type": "text/x-gwt-rpc; charset=UTF-8",
@@ -386,14 +425,15 @@ async function generateIcalUrl(sessionAxios, classe) {
     );
 
     if (response4.status !== 200) {
-      throw new Error(`HTTP ${response4.status} à l'étape 4 (Génération URL)`);
+      throw new Error(`HTTP ${response4.status} à l'étape 4`);
     }
 
+    // Extraction de l'URL du fichier .ical
     const responseText = response4.data;
     const urlMatch = responseText.match(/https?:\/\/[^\s"\\]+/g);
 
     if (urlMatch && urlMatch[0]) {
-      await addLog(`✅ URL générée : ${urlMatch[0]}`, "INFO");
+      await addLog(`✅ URL GLOBALE générée : ${urlMatch[0]}`, "INFO");
       return urlMatch[0];
     } else {
       throw new Error("URL .ical introuvable dans la réponse GWT");
@@ -406,17 +446,20 @@ async function generateIcalUrl(sessionAxios, classe) {
 }
 
 // ===============================================================================================
-// RETRY INTELLIGENT AVEC RESET COOKIES
+// RETRY INTELLIGENT
 // ===============================================================================================
 
-async function attemptUrlGenerationWithRetry(classe) {
+/**
+ * Tente de générer l'URL avec retry automatique
+ * @returns {Promise<string>} URL du calendrier global
+ */
+async function attemptUrlGenerationWithRetry() {
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
-      await addLog(`🔄 Tentative ${attempt}/${MAX_RETRY_ATTEMPTS} pour classe ${classe}`, "INFO");
+      await addLog(`🔄 Tentative ${attempt}/${MAX_RETRY_ATTEMPTS} pour calendrier GLOBAL`, "INFO");
 
-      // ÉTAPE CRITIQUE : Nouvelle connexion à chaque tentative (cookies frais)
       const sessionAxios = await performLogin();
-      const url = await generateIcalUrl(sessionAxios, classe);
+      const url = await generateGlobalIcalUrl(sessionAxios);
       
       await addLog(`✅ Succès après ${attempt} tentative(s)`, "INFO");
       return url;
@@ -425,7 +468,6 @@ async function attemptUrlGenerationWithRetry(classe) {
       await addLog(`❌ Tentative ${attempt} échouée : ${error.message}`, "ERROR");
 
       if (attempt < MAX_RETRY_ATTEMPTS) {
-        // Délai exponentiel : 500ms, 1s, 1.5s, 2s, 2.5s...
         const delay = 500 * attempt;
         await addLog(`⏳ Attente de ${delay}ms avant réessai...`, "INFO");
         await sleep(delay);
@@ -442,29 +484,26 @@ async function attemptUrlGenerationWithRetry(classe) {
 // ===============================================================================================
 
 /**
- * Fonction principale : genCalendar()
+ * Génère ou récupère l'URL du calendrier global GEII
+ * - Utilise le cache si disponible et valide
+ * - Génère une nouvelle URL si nécessaire
+ * - Gère le mode hors ligne
  * 
- * LOGIQUE :
- * 1. Mode hors ligne → Retourner cache (sans validation)
- * 2. Mode en ligne + cache existe → Valider URL
- *    → Si valide : Retourner cache
- *    → Si morte : Régénérer
- * 3. Pas de cache → Générer nouvelle URL
- * 4. Sauvegarder nouvelle URL dans cache
- * 
- * NOTE : Ne prend plus date1/date2 en paramètre, calcule automatiquement 1 an
+ * @returns {Promise<Object>} Objet contenant l'URL et des métadonnées
+ *   - url: URL du fichier .ical (ou null)
+ *   - fromCache: true si l'URL vient du cache
+ *   - isOffline: true si l'appareil est hors ligne
  */
-export async function genCalendar(classe) {
+export async function genCalendar() {
   await addLog(`\n${'='.repeat(60)}`, "INFO");
-  await addLog(`DÉBUT genCalendar pour classe ${classe}`, "INFO");
+  await addLog(`DÉBUT genCalendar (CALENDRIER GLOBAL)`, "INFO");
   await addLog(`${'='.repeat(60)}`, "INFO");
 
-  // 1. Vérifier connectivité réseau
   const online = await isOnline();
   
   if (!online) {
     await addLog("📶 Mode HORS LIGNE détecté", "INFO");
-    const cachedUrl = await getUrlFromCache(classe);
+    const cachedUrl = await getUrlFromCache();
     
     if (cachedUrl) {
       await addLog("📦 Utilisation du cache (mode hors ligne)", "INFO");
@@ -475,13 +514,11 @@ export async function genCalendar(classe) {
     }
   }
 
-  // 2. Mode EN LIGNE : Vérifier le cache
-  const cachedUrl = await getUrlFromCache(classe);
+  const cachedUrl = await getUrlFromCache();
   
   if (cachedUrl) {
     await addLog("🔍 Cache trouvé, validation en cours...", "INFO");
     
-    // VALIDATION COMPLÈTE (télécharge début du .ical)
     const isValid = await isUrlStillValid(cachedUrl);
     
     if (isValid) {
@@ -494,12 +531,9 @@ export async function genCalendar(classe) {
     await addLog("🆕 Aucun cache → Génération d'une nouvelle URL", "INFO");
   }
 
-  // 3. Générer nouvelle URL (avec retry intelligent)
   try {
-    const newUrl = await attemptUrlGenerationWithRetry(classe);
-    
-    // 4. Sauvegarder dans le cache
-    await saveUrlToCache(classe, newUrl);
+    const newUrl = await attemptUrlGenerationWithRetry();
+    await saveUrlToCache(newUrl);
     
     await addLog("🎉 Génération terminée avec succès", "INFO");
     return { url: newUrl, fromCache: false, isOffline: false };
@@ -507,9 +541,8 @@ export async function genCalendar(classe) {
   } catch (error) {
     await addLog(`💥 Échec génération : ${error.message}`, "ERROR");
     
-    // FALLBACK : Utiliser cache même si validation a échoué
     if (cachedUrl) {
-      await addLog("⚠️ Utilisation cache en dernier recours (validation avait échoué)", "INFO");
+      await addLog("⚠️ Utilisation cache en dernier recours", "INFO");
       return { url: cachedUrl, fromCache: true, isOffline: false };
     }
     
