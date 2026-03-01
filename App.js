@@ -157,7 +157,7 @@ const themes = {
 };
 
 /** Version de l'application */
-const APP_VERSION = "v1.4.0";
+const APP_VERSION = "v1.5.0";
 
 // ===============================================================================================
 // FONCTIONS UTILITAIRES
@@ -1631,6 +1631,8 @@ export function MainApp() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [globalCalendarLoaded, setGlobalCalendarLoaded] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('none'); // Peut être: 'syncing', 'synced', 'offline', 'error', 'none'
+  const [lastSyncDate, setLastSyncDate] = useState(null);
 
   // ... États de navigation (inchangés)
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
@@ -1743,52 +1745,12 @@ export function MainApp() {
 
   // Chargement du Calendrier
   useEffect(() => {
-    if (!groupHasLoaded) return;
+      if (!groupHasLoaded) return;
 
-    const loadGlobalCalendar = async () => {
-      setLoading(true);
-      console.log("🔥 Chargement du calendrier GLOBAL...");
-
-      let eventsToProcess = [];
-
-      try {
-        const cachedEvents = await AsyncStorage.getItem('@parsed_global_events');
-        if (cachedEvents) {
-          const parsed = JSON.parse(cachedEvents);
-          eventsToProcess = parsed.map(event => ({
-            ...event,
-            start: new Date(event.start),
-            end: new Date(event.end)
-          }));
-          console.log(`✅ Cache trouvé : ${parsed.length} événements`);
-        }
-      } catch (e) { console.log("Pas de cache"); }
-
-      if (eventsToProcess.length === 0) {
-        const result = await genCalendar();
-        if (result.url) {
-          try {
-            const events = await parseGlobalICS(result.url);
-            eventsToProcess = events.map(event => ({
-              ...event,
-              start: new Date(event.start),
-              end: new Date(event.end)
-            }));
-            await AsyncStorage.setItem('@parsed_global_events', JSON.stringify(events));
-          } catch (error) {
-            Alert.alert("Erreur", "Erreur lecture calendrier.");
-          }
-        }
-      }
-
-      if (eventsToProcess.length > 0) {
-        setAllEvents(eventsToProcess);
-
-        // Extraction Intelligente des Salles (NOUVEAU)
+      const extractAndSetRooms = (events) => {
         const roomSet = new Set();
-        eventsToProcess.forEach(e => {
+        events.forEach(e => {
           if (e.location) {
-            // On sépare les salles s'il y a des virgules
             const splitRooms = e.location.split(','); 
             splitRooms.forEach(r => {
               const cleanRoom = r.trim();
@@ -1798,17 +1760,85 @@ export function MainApp() {
             });
           }
         });
-        const sortedRooms = Array.from(roomSet).sort();
-        setAvailableRooms(sortedRooms);
+        setAvailableRooms(Array.from(roomSet).sort());
+      };
 
-        setGlobalCalendarLoaded(true);
-      }
-      
-      setLoading(false);
-    };
+      const loadGlobalCalendar = async () => {
+        // 1. AFFICHAGE INSTANTANÉ DEPUIS LE CACHE
+        try {
+          const cachedEvents = await AsyncStorage.getItem('@parsed_global_events');
+          const savedSyncDate = await AsyncStorage.getItem('@last_sync_date');
+          if (savedSyncDate) setLastSyncDate(savedSyncDate);
 
-    loadGlobalCalendar();
-  }, [groupHasLoaded]);
+          if (cachedEvents) {
+            const parsed = JSON.parse(cachedEvents);
+            const eventsFromCache = parsed.map(event => ({
+              ...event,
+              start: new Date(event.start),
+              end: new Date(event.end)
+            }));
+            
+            setAllEvents(eventsFromCache);
+            extractAndSetRooms(eventsFromCache);
+            setGlobalCalendarLoaded(true);
+            setLoading(false); // On enlève l'écran de chargement instantanément !
+            console.log(`✅ Cache affiché : ${eventsFromCache.length} événements`);
+          }
+        } catch (e) { console.log("Pas de cache lisible"); }
+
+        // 2. MISE À JOUR FANTÔME EN ARRIÈRE-PLAN
+        if (!loading) setSyncStatus('syncing'); 
+        
+        try {
+          const result = await genCalendar(); // Utilise adeApi.js
+
+          if (result.isOffline) {
+            setSyncStatus('offline');
+            // Si pas de cache du tout, on enlève le chargement infini
+            if (!globalCalendarLoaded) setLoading(false); 
+            return;
+          }
+
+          if (result.url) {
+            // On télécharge le nouveau .ics avec l'URL (qui est soit la même, soit une nouvelle)
+            const newEvents = await parseGlobalICS(result.url);
+
+            // On met à jour la date de synchro
+            const nowString = new Date().toLocaleString('fr-FR', { 
+              day: '2-digit', month: '2-digit', year: 'numeric', 
+              hour: '2-digit', minute: '2-digit' 
+            });
+            await AsyncStorage.setItem('@last_sync_date', nowString);
+            setLastSyncDate(nowString);
+
+            const eventsToProcess = newEvents.map(event => ({
+              ...event,
+              start: new Date(event.start),
+              end: new Date(event.end)
+            }));
+
+            // On met à jour le state et on écrase l'ancien cache
+            setAllEvents(eventsToProcess);
+            extractAndSetRooms(eventsToProcess);
+            await AsyncStorage.setItem('@parsed_global_events', JSON.stringify(newEvents));
+
+            setGlobalCalendarLoaded(true);
+            setSyncStatus('synced');
+
+            // On efface le message "Planning à jour !" après 3 secondes
+            setTimeout(() => setSyncStatus('none'), 3000);
+          }
+        } catch (error) {
+          console.error("Erreur MAJ fantôme:", error);
+          setSyncStatus('error');
+          setTimeout(() => setSyncStatus('none'), 4000);
+        } finally {
+          setLoading(false); // Sécurité
+        }
+      };
+
+      loadGlobalCalendar();
+    }, [groupHasLoaded]);
 
   // Filtrage automatique quand la sélection ou les données changent
   useEffect(() => {
@@ -2510,10 +2540,46 @@ export function MainApp() {
           </TouchableOpacity>
         </View>
 
+        {/* --- INDICATEUR DE SYNCHRONISATION (Discret en haut) --- */}
+        {syncStatus !== 'none' && (
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            paddingVertical: 4, 
+            backgroundColor: theme.topBar,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.borderColor
+          }}>
+            <Ionicons 
+              name={
+                syncStatus === 'syncing' ? 'sync' : 
+                syncStatus === 'offline' ? 'cloud-offline' : 
+                syncStatus === 'synced' ? 'checkmark-circle' : 'warning'
+              } 
+              size={12} 
+              color={
+                syncStatus === 'syncing' ? '#2196F3' : 
+                syncStatus === 'synced' ? '#4CAF50' : '#F44336'
+              } 
+              style={{ marginRight: 5 }} 
+            />
+            <Text style={{ 
+              color: syncStatus === 'syncing' ? '#2196F3' : syncStatus === 'synced' ? '#4CAF50' : '#F44336', 
+              fontSize: 10, 
+              fontStyle: 'italic' 
+            }}>
+              {syncStatus === 'syncing' ? 'Vérification des mises à jour...' : 
+               syncStatus === 'offline' ? `Hors ligne (Dernière MAJ : ${lastSyncDate || 'Inconnue'})` : 
+               syncStatus === 'synced' ? 'Planning à jour !' : 'Erreur de mise à jour'}
+            </Text>
+          </View>
+        )}
+
         {/* Le calendrier va maintenant prendre toute la place restante */}
         {renderCalendar()}
         
-        {/* ... (Tes modales ici, pas de changement, copie-les juste) ... */}
+        {/* Modales */}
         <MenuModal 
           visible={menuModalVisible} 
           onClose={() => { setMenuModalVisible(false); setMenuTapCount(0); }}

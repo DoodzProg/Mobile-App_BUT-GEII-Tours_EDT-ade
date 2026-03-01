@@ -5,13 +5,15 @@
   
   **L'application d'emploi du temps ultime pour le département GEII de l'IUT de Tours.**
 
-  [![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android)](https://play.google.com/store/apps/details?id=fr.doodz.edtgeii)
+  [![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android)](https://github.com/DoodzProg/Mobile-App_BUT-GEII-Tours_EDT-ade/releases/download/v1.5.0/v1.5.0_EDT-Geii.apk)
   [![Framework](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-61DAFB?style=for-the-badge&logo=react)](https://expo.dev/)
-  [![Status](https://img.shields.io/badge/Version-1.4.0-blue?style=for-the-badge)]()
+  [![Status](https://img.shields.io/badge/Version-1.5.0-blue?style=for-the-badge)]()
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)]()
 
-  <a href="https://play.google.com/store/apps/details?id=fr.doodz.edtgeii">
-    <img alt="Get it on Google Play" height="80" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"/>
+  <br>
+
+  <a href="https://github.com/DoodzProg/Mobile-App_BUT-GEII-Tours_EDT-ade/releases/download/v1.5.0/v1.5.0_EDT-Geii.apk">
+    <img alt="Télécharger l'APK" src="https://img.shields.io/badge/T%C3%A9l%C3%A9charger_l'APK-Direct_Download-FF4500?style=for-the-badge&logo=android&logoColor=white"/>
   </a>
 </div>
 
@@ -56,34 +58,28 @@
 
 ---
 
-## ✨ Mises à jour majeures (v1.4.0)
+## ✨ Mises à jour majeures (v1.5.0)
 
-Cette version introduit une refonte complète de l'architecture des données pour une performance et une fiabilité accrues.
+Cette version introduit la **Synchronisation Intelligente** ! L'application est désormais capable de se mettre à jour toute seule, sans jamais bloquer la navigation de l'utilisateur.
 
-### 🚀 Architecture "Single Source of Truth"
-* **Optimisation Réseau :** L'application ne fait plus qu'**UNE SEULE requête API** globale. Elle télécharge un fichier `.ics` massif contenant l'intégralité des plannings (Étudiants, Profs, Salles, Groupes...).
-* **Zéro Latence :** Le changement de groupe, d'enseignant ou de salle est désormais **instantané** car il s'agit d'un filtrage local des données déjà en mémoire.
-* **Stabilité :** Supprime totalement le risque de "rate limiting" (bannissement temporaire) par le serveur ADE, car l'utilisateur ne bombarde plus l'API à chaque clic.
-* **Mode Hors-Ligne Robuste :** Le calendrier global est mis en cache (`AsyncStorage`). L'application reste 100% fonctionnelle même sans internet. (En se basant sur les dernières données chargées)
+### 🔄 Architecture "Cache-then-Network" (Mise à jour fantôme)
+* **Affichage instantané :** Au lancement, l'application charge l'emploi du temps sauvegardé en mémoire locale. Temps de chargement : **0 seconde**. Vous pouvez consulter votre planning immédiatement.
+* **Mise à jour en arrière-plan :** Pendant que vous regardez votre planning, l'application interroge les serveurs de l'IUT de manière invisible. Si un prof a modifié une salle ou ajouté un cours, l'écran s'actualise sous vos yeux en direct.
+* **Indicateur de statut :** Un nouvel indicateur discret fait son apparition sous la barre de navigation pour vous tenir informé de l'état des données (*"Vérification..."* 🔄, *"À jour"* ✅).
 
-### 🏢 Gestion des Salles & Disponibilités
-* **Planning des Salles :** Consultation de l'emploi du temps de n'importe quelle salle de l'IUT, triées par étage.
-* **Filtre "Salles Libres" :** Un bouton intelligent permet de n'afficher que les salles disponibles.
-    * *Algorithme :* Une salle est considérée libre si aucun cours n'y a lieu **maintenant** ET dans les **15 prochaines minutes**. Idéal pour trouver une salle de travail rapidement.
+### 📡 Mode Hors-Ligne Optimisé
+* Fini les écrans de chargement infinis dans les sous-sols (comme le bâtiment W) !
+* Si vous n'avez pas de réseau, l'indicateur passera en rouge et vous affichera la date de la **dernière synchronisation réussie**, tout en vous laissant un accès total au planning sauvegardé.
 
-### ⭐ Système de Favoris
-* Accès rapide via l'étoile en haut à droite.
-* Permet de sauvegarder des **groupes** (ex: BUT3 AII2), des **salles** (ex: GR W 006) pour basculer de l'un à l'autre en un clic.
+---
 
-### 🔔 Notifications Intelligentes
-* Système de rappel configurable.
-* L'utilisateur peut choisir d'être notifié **X temps** (de 00h00 à 24h59) avant le début de son prochain cours.
-* Fonctionne en arrière-plan grâce à `expo-notifications`.
+## 🕰️ Nouveautés de la version précédente (v1.4.0)
 
-### 🎨 UX & Personnalisation
-* **Navigation par Swipe :** Glissez latéralement sur le planning pour changer de semaine ou de jour.
-* **Nouveaux Thèmes Premium :** Ajout de *Abyss*, *Dark Green* (Matrix), *Dracula*, *Nord*, *Monokai* et *Solarized* en plus des classiques Jour/Nuit.
-* **Couleurs Dynamiques :** Personnalisation complète des couleurs par matière ou par type de cours (CM/TD/TP).
+*(Historique des fonctionnalités majeures)*
+* **Requête Unique :** Téléchargement d'un fichier `.ics` global pour esquiver les bannissements du serveur ADE. Changement de groupe instantané.
+* **Salles Libres :** Filtre permettant d'afficher uniquement les salles inoccupées pour les 15 prochaines minutes.
+* **Notifications & Favoris :** Rappels configurables avant le début des cours et sauvegarde de vos groupes/salles préférés.
+* **Design :** Navigation par *swipe* et thèmes premium (*Solarized*, *Abyss*, *Monokai*, etc.).
 
 ---
 
@@ -110,7 +106,7 @@ Pour tester ou contribuer au projet :
 
 1.  **Cloner le dépôt :**
     ```bash
-    git clone https://github.com/DoodzProg/Mobile-App_BUT-GEII-Tours_EDT-ade.git
+    git clone [https://github.com/DoodzProg/Mobile-App_BUT-GEII-Tours_EDT-ade.git](https://github.com/DoodzProg/Mobile-App_BUT-GEII-Tours_EDT-ade.git)
     cd Mobile-App_BUT-GEII-Tours_EDT-ade
     ```
 

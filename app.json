@@ -2,7 +2,7 @@
   "expo": {
     "name": "EDT GEII",
     "slug": "edt-geii",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "fr.doodz.edtgeii",
-      "buildNumber": "1.4.0"
+      "buildNumber": "1.5.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -43,6 +43,11 @@
           "color": "#ffffff"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "84dc6e98-c43c-42d2-946d-a7e4dec701f7"
+      }
+    }
   }
 }
